@@ -1,9 +1,18 @@
 package scala_book {
   sealed trait MyList[+A] {
+    def ::[B >: A](x: B): MyList[B] =
+      Cons(x, this)
+
     //not stack-safe because it uses foldRight
     def map[B](f: A => B): MyList[B] = {
-      MyList.foldRight(this, Nil: MyList[B])((h, t) => Cons(f(h), t))
+      this.foldRight(Nil: MyList[B])((h, t) => Cons(f(h), t))
     }
+
+    def foldRight[B](z: B)(f: (A, B) => B): B =
+      this match {
+        case Nil        => z
+        case Cons(h, t) => f(h, t.foldRight(z)(f))
+      }
   }
 
   case object Nil extends MyList[Nothing]
@@ -21,12 +30,6 @@ package scala_book {
         case Cons(h, t) => foldLeft(t, f(z, h))(f)
       }
     }
-
-    def foldRight[A, B](as: MyList[A], z: B)(f: (A, B) => B): B =
-      as match {
-        case Nil        => z
-        case Cons(h, t) => f(h, foldRight(t, z)(f))
-      }
 
     def turnToString(as: MyList[Double]) = {
       as.map(d => d.toString)
@@ -55,7 +58,7 @@ package scala_book {
       }
 
     def filter[A](as: MyList[A])(f: A => Boolean): MyList[A] = {
-      foldRight(as, Nil: MyList[A])((a, b) => if (f(a)) Cons(a, b) else b)
+      as.foldRight(Nil: MyList[A])((a, b) => if (f(a)) Cons(a, b) else b)
     }
 
     def filterWithFlatmap[A](as: MyList[A])(f: A => Boolean): MyList[A] = {
@@ -63,16 +66,16 @@ package scala_book {
     }
 
     def addOneToElement(l: MyList[Int]): MyList[Int] = {
-      foldRight(l, Nil: MyList[Int])((h, t) => Cons(h + 1, t))
+      l.foldRight(Nil: MyList[Int])((h, t) => Cons(h + 1, t))
     }
 
     def append[A](as: MyList[A], n: A): MyList[A] = {
-      foldRight(as, Cons(n, Nil))((a, b) => Cons(a, b))
+      as.foldRight(Cons(n, Nil))((a, b) => Cons(a, b))
     }
 
     def concatenateLists[A](ls: MyList[MyList[A]]): MyList[A] = {
-      foldRight(ls, Nil: MyList[A])((a, b) =>
-        foldRight(a, b)((a, b) => Cons(a, b))
+      ls.foldRight(Nil: MyList[A])((a, b) =>
+        a.foldRight(b)((a, b) => Cons(a, b))
       )
     }
 
@@ -91,14 +94,14 @@ package scala_book {
     }
 
     def length[A](as: MyList[A]): Int = {
-      foldRight(as, 0)((a, b) => b + 1)
+      as.foldRight(0)((a, b) => b + 1)
     }
 
     def sum2(ns: MyList[Int]) =
-      foldRight(ns, 0)(_ + _)
+      ns.foldRight(0)(_ + _)
 
     def product2(ns: MyList[Double]) =
-      foldRight(ns, 1.0)(_ * _)
+      ns.foldRight(1.0)(_ * _)
 
     def sum(ints: MyList[Int]): Int =
       ints match {
