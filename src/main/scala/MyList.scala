@@ -13,6 +13,11 @@ package scala_book {
         case Nil        => z
         case Cons(h, t) => f(h, t.foldRight(z)(f))
       }
+
+    def length[A](): Int = {
+      this.foldRight(0)((a, b) => b + 1)
+    }
+
   }
 
   case object Nil extends MyList[Nothing]
@@ -46,6 +51,12 @@ package scala_book {
         case (Nil, _) => Nil
         case (Cons(h, t), Cons(h2, t2)) =>
           Cons(h + h2, zipWithIntegerAddition(t, t2))
+      }
+
+    def sum(ints: MyList[Double]): Double =
+      ints match {
+        case Nil         => 0
+        case Cons(x, xs) => x + sum(xs)
       }
 
     def zipWith[A, B, C](l1: MyList[A], l2: MyList[B])(
@@ -93,21 +104,11 @@ package scala_book {
       foldLeft(as, 0)((a, b) => a + 1)
     }
 
-    def length[A](as: MyList[A]): Int = {
-      as.foldRight(0)((a, b) => b + 1)
-    }
-
     def sum2(ns: MyList[Int]) =
       ns.foldRight(0)(_ + _)
 
     def product2(ns: MyList[Double]) =
       ns.foldRight(1.0)(_ * _)
-
-    def sum(ints: MyList[Int]): Int =
-      ints match {
-        case Nil         => 0
-        case Cons(x, xs) => x + sum(xs)
-      }
 
     def product(ds: MyList[Double]): Double =
       ds match {
