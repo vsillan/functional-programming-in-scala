@@ -1,9 +1,19 @@
 package scala_book {
-  trait MyList[+A] {}
+  sealed trait MyList[+A] {
+    //not stack-safe because it uses foldRight
+    def map[B](f: A => B): MyList[B] = {
+      MyList.foldRight(this, Nil: MyList[B])((h, t) => Cons(f(h), t))
+    }
+  }
+
   case object Nil extends MyList[Nothing]
   case class Cons[+A](head: A, tail: MyList[A]) extends MyList[A]
 
   object MyList {
+    def apply[A](as: A*): MyList[A] =
+      if (as.isEmpty) Nil
+      else Cons(as.head, apply(as.tail: _*))
+
     @annotation.tailrec
     def foldLeft[A, B](as: MyList[A], z: B)(f: (B, A) => B): B = {
       as match {
@@ -19,16 +29,12 @@ package scala_book {
       }
 
     def turnToString(as: MyList[Double]) = {
-      map(as)(d => d.toString)
-    }
-    //not stack-safe because it uses foldRight
-    def map[A, B](as: MyList[A])(f: A => B): MyList[B] = {
-      foldRight(as, Nil: MyList[B])((h, t) => Cons(f(h), t))
+      as.map(d => d.toString)
     }
 
     def flatMap[A, B](as: MyList[A])(f: A => MyList[B]): MyList[B] = {
-      // foldRight(as, Nil: MyList[B])((h,t) => concatenateLists(MyList(f(h),t))) // alternative implementation
-      concatenateLists(map(as)(f))
+      // foldRight(as, Nil: MyList[B])((h, t) => concatenateLists(MyList(f(h), t))) // alternative implementation
+      concatenateLists(as.map(f))
     }
 
     def zipWithIntegerAddition(l1: MyList[Int], l2: MyList[Int]): MyList[Int] =
@@ -106,10 +112,6 @@ package scala_book {
         case Cons(x, xs) => x * product(xs)
       }
 
-    def apply[A](as: A*): MyList[A] =
-      if (as.isEmpty) Nil
-      else Cons(as.head, apply(as.tail: _*))
-
     def tail[A](l: MyList[A]): MyList[A] =
       l match {
         case Nil        => sys.error("tail of empty MyList")
@@ -145,6 +147,5 @@ package scala_book {
       }
 
     def empty() = MyList()
-
   }
 }
