@@ -6,4 +6,8 @@ class MyOptionTest extends UnitSpec {
       MyOption.mean(MyList()) == MyNone
     )
   }
+
+  "map" should "apply map function with some" in {
+    assert(MySome(3).map(x => x * 2) == MySome(6))
+  }
 }

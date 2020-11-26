@@ -56,5 +56,12 @@ package scala_book {
         map2(f(h), t)(_ :: _)
       )
     }
+
+    def sequence[A](l: MyList[MyOption[A]]): MyOption[MyList[A]] = {
+      l match {
+        case Nil        => MySome(Nil)
+        case Cons(h, t) => h.flatMap(hh => sequence(t).map(hh :: _))
+      }
+    }
   }
 }
