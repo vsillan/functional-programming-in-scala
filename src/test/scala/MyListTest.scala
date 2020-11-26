@@ -20,4 +20,8 @@ class MyListTest extends UnitSpec {
       ) == MyList(2, 8, 18)
     )
   }
+
+  "fill" should "create a new list of count with defined value repeating" in {
+    assert(MyList.fill(5)(2) == MyList(2, 2, 2, 2, 2))
+  }
 }

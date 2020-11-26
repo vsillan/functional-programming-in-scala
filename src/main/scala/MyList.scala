@@ -17,7 +17,6 @@ package scala_book {
     def length[A](): Int = {
       this.foldRight(0)((a, b) => b + 1)
     }
-
   }
 
   case object Nil extends MyList[Nothing]
@@ -151,5 +150,16 @@ package scala_book {
       }
 
     def empty() = MyList()
+
+    def fill[A](c: Int)(x: A): MyList[A] = {
+      def buildList(l: MyList[A], count: Int): MyList[A] = {
+        if (count > 0) {
+          return buildList(x :: l, count - 1)
+        } else {
+          return l
+        }
+      }
+      return buildList(MyList.empty(), c)
+    }
   }
 }
