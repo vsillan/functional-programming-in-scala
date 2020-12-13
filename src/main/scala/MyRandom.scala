@@ -14,12 +14,12 @@ package scala_book {
   }
 
   object MyRandom {
-    type Rand[+A] = RNG => (A, RNG)
+    type Rand[+A] = State[RNG, A]
 
     def unit[A](x: A): Rand[A] =
-      rng => {
+      State(rng => {
         (x, rng)
-      }
+      })
 
     def nonNegativeInt(rng: RNG): (Int, RNG) = {
       val (n, rng2) = rng.nextInt
@@ -71,31 +71,34 @@ package scala_book {
     }
 
     def intsWithSequence(count: Int)(rng: RNG): (MyList[Int], RNG) = {
-      sequence(MyList.fill(count)((rng: RNG) => rng.nextInt))(rng)
+      val state = sequence(
+        MyList.fill(count)(State((rng2: RNG) => rng2.nextInt))
+      )
+      state.run(rng)
     }
 
     def map[A, B](s: Rand[A])(f: A => B): Rand[B] =
-      (rng: RNG) => {
-        val (a, rng2) = s(rng)
+      State((rng: RNG) => {
+        val (a, rng2) = s.run(rng)
         (f(a), rng2)
-      }
+      })
 
     def doubleWithMap(rng: RNG): Rand[Double] = {
-      map(nonNegativeInt)(_ / (Int.MaxValue.toDouble + 1))
+      map(State(nonNegativeInt))(_ / (Int.MaxValue.toDouble + 1))
     }
 
     def map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
-      rng => {
-        val (a, rng2) = ra(rng)
-        val (b, rng3) = rb(rng2)
+      State(rng => {
+        val (a, rng2) = ra.run(rng)
+        val (b, rng3) = rb.run(rng2)
         (f(a, b), rng3)
-      }
+      })
 
     def flatMap[A, B](f: Rand[A])(g: A => Rand[B]): Rand[B] =
-      rng => {
-        val (a, rng2) = f(rng)
-        g(a)(rng2)
-      }
+      State(rng => {
+        val (a, rng2) = f.run(rng)
+        g(a).run(rng2)
+      })
 
     def mapWithFlatmap[A, B](s: Rand[A])(f: A => B): Rand[B] = {
       flatMap(s)(a => unit(f(a)))
@@ -111,7 +114,7 @@ package scala_book {
     }
 
     def nonNegativeLessThan(n: Int): Rand[Int] = {
-      flatMap(nonNegativeInt) { i =>
+      flatMap(State(nonNegativeInt)) { i =>
         val mod = i % n
         if (i + (n - 1) - mod >= 0) unit(mod)
         else nonNegativeLessThan(n)

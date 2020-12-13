@@ -1,0 +1,29 @@
+import scala_book._
+
+case class TestState(a1: Int) {
+  var a: Int = a1
+}
+
+class MyStateTest extends UnitSpec {
+  "map" should "apply a function to the value" in {
+    val state = State[TestState, Int](s => {
+      s.a = s.a + s.a
+      (s.a, s)
+    }).map(a => a * 2)
+
+    assert(state.run(new TestState(1))._1 == 4)
+  }
+
+  "flatMap" should "enable to change the type of the return value" in {
+    val state = State[TestState, Int](s => {
+      s.a = s.a + s.a
+      (s.a, s)
+    }).flatMap(a =>
+      State[TestState, String](s => {
+        (s.a.toString(), s)
+      })
+    )
+
+    assert(state.run(new TestState(2))._1 == "4")
+  }
+}
