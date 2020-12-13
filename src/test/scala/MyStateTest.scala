@@ -26,4 +26,16 @@ class MyStateTest extends UnitSpec {
 
     assert(state.run(new TestState(2))._1 == "4")
   }
+
+  "sequence" should "combine many state transitions" in {
+    val x = State.sequence(
+      MyList(
+        State((rng: RNG) => rng.nextInt),
+        State((rng: RNG) => rng.nextInt),
+        State((rng: RNG) => rng.nextInt)
+      )
+    )
+
+    assert(x.run(TestRNG(0))._1 == MyList(1, 2, 3))
+  }
 }

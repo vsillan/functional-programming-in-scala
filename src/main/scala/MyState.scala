@@ -26,8 +26,10 @@ package scala_book {
   object State {
     def unit[S, A](a: A): State[S, A] = State(s => (a, s))
 
-    def sequence[S, A](fs: List[State[S, A]]): State[S, List[A]] = {
-      fs.foldRight(unit[S, List[A]](List()))((f, acc) => f.map2(acc)(_ :: _))
+    def sequence[S, A](fs: MyList[State[S, A]]): State[S, MyList[A]] = {
+      fs.foldRight(unit[S, MyList[A]](MyList()))((f, acc) =>
+        f.map2(acc)(_ :: _)
+      )
     }
 
     def modify[S](f: S => S): State[S, Unit] =
