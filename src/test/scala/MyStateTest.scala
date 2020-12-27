@@ -38,4 +38,9 @@ class MyStateTest extends UnitSpec {
 
     assert(x.run(TestRNG(0))._1 == MyList(1, 2, 3))
   }
+
+  "modify" should "enable state modification" in {
+    val x = State.modify[TestState](s => TestState(s.a * 2))
+    assert(x.run(new TestState(1))._2.a == 2)
+  }
 }
