@@ -36,5 +36,26 @@ package scala_book {
           }
       }
     }
+
+    def process =
+      (input: Input) =>
+        (state: CandyMachine) => {
+          (input, state) match {
+            case (_, CandyMachine(_, 0, _))        => state
+            case (Turn, CandyMachine(true, _, _))  => state
+            case (Coin, CandyMachine(false, _, _)) => state
+            case (Coin, CandyMachine(true, candies, coins)) =>
+              CandyMachine(false, candies, coins + 1)
+            case (Turn, CandyMachine(false, candies, coins)) =>
+              CandyMachine(true, candies - 1, coins)
+          }
+        }
+
+    def simulate2(inputs: MyList[Input]): State[CandyMachine, (Int, Int)] = {
+      return for {
+        _ <- State.sequence(inputs.map(i => State.modify(process(i))))
+        a <- State.get
+      } yield (a.candies, a.coins)
+    }
   }
 }
