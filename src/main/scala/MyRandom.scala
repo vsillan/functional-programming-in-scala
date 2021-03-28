@@ -30,6 +30,11 @@ package scala_book {
       }
     }
 
+    def boolean(rng: RNG): (Boolean, RNG) = {
+      val (n, rng2) = rng.nextInt
+      (n > 0, rng2)
+    }
+
     def double(rng: RNG): (Double, RNG) = {
       val (n, rng2) = nonNegativeInt(rng)
       ((n / (Int.MaxValue.toDouble + 1)), rng2)
