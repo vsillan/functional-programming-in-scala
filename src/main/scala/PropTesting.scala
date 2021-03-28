@@ -1,4 +1,84 @@
 package scala_book {
+  import scala_book.Prop.Passed
+  import scala_book.Prop.Falsified
+
+  //
+  // Prop
+  //
+  case class Prop(run: (Prop.TestCases, RNG) => Prop.Result) {
+    def &&(p: Prop): Prop = {
+      Prop((testCases, rng) => {
+        this.run(testCases, rng) match {
+          case Passed => p.run(testCases, rng)
+          case x      => x
+        }
+      })
+    }
+
+    def ||(p: Prop): Prop = {
+      Prop((testCases, rng) => {
+        this.run(testCases, rng) match {
+          case Passed =>
+            p.run(testCases, rng) match {
+              case Passed                        => Passed
+              case Falsified(failure, successes) => Passed
+            }
+          case Falsified(failure, successes) =>
+            p.tag(failure).run(testCases, rng)
+        }
+      })
+    }
+
+    def tag(msg: String) =
+      Prop((n, rng) =>
+        run(n, rng) match {
+          case Falsified(e, sc) => Falsified(msg + ", " + e, sc)
+          case x                => x
+        }
+      )
+  }
+
+  object Prop {
+    type TestCases = Int
+    type FailedCase = String
+    type SuccessCount = Int
+
+    sealed trait Result {
+      def isFalsified: Boolean
+    }
+    case object Passed extends Result {
+      def isFalsified = false
+    }
+
+    case class Falsified(failure: FailedCase, successes: SuccessCount)
+        extends Result { def isFalsified = true }
+
+    def forAll[A](as: Gen[A])(f: A => Boolean): Prop =
+      Prop((n, rng) =>
+        randomStream(as)(rng)
+          .zip(Stream.from(0))
+          .take(n)
+          .map {
+            case (a, i) =>
+              try {
+                if (f(a)) Passed else Falsified(a.toString, i)
+              } catch { case e: Exception => Falsified(buildMsg(a, e), i) }
+          }
+          .find(_.isFalsified)
+          .getOrElse(Passed)
+      )
+
+    def randomStream[A](g: Gen[A])(rng: RNG): Stream[A] =
+      Stream.unfold(rng)(rng => Some(g.sample.run(rng)))
+
+    def buildMsg[A](s: A, e: Exception): String =
+      s"test case: $s\n" +
+        s"generated an exception: ${e.getMessage}\n" + s"stack trace:\n ${e.getStackTrace.mkString("\n")}"
+  }
+
+  //
+  // Gen
+  //
   case class Gen[A](sample: State[RNG, A]) {
     def flatMap[B](f: A => Gen[B]): Gen[B] = {
       Gen(State(s => {

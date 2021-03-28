@@ -1,4 +1,6 @@
 import scala_book._
+import scala_book.Prop.Falsified
+import scala_book.Prop.Passed
 
 class PropTestingTest extends UnitSpec {
   "Gen.choose" should "return a sampler which adheres to the passed range" in {
@@ -56,5 +58,36 @@ class PropTestingTest extends UnitSpec {
     val union = Gen.weighted((g1, 0.3), (g2, 0.7))
     val (x, s) = union.sample.run(TestRNG(Int.MaxValue - 1))
     assert(x < 0)
+  }
+
+  "Prop &&" should "work" in {
+    val p1 = Prop.forAll(Gen.choose(1, 2))(a => a == 1)
+    val p2 = Prop.forAll(Gen.choose(1, 2))(a => a != 1)
+    val x = (p1 && p2).run(1, TestRNG(1))
+    assert(x.isFalsified == true)
+  }
+
+  "Prop ||" should "work" in {
+    val p1 = Prop.forAll(Gen.choose(1, 2))(a => a == 1)
+    val p2 = Prop.forAll(Gen.choose(1, 2))(a => a != 1)
+    val r = (p1 || p2).run(1, TestRNG(1))
+    assert(r.isFalsified == false)
+
+    r match {
+      case Falsified(failure, successes) =>
+        assert(failure == "")
+      case y => y
+    }
+  }
+
+  "Prop ||" should "write an error message about both failed cases" in {
+    val p1 = Prop.forAll(Gen.choose(1, 3))(a => a == 1)
+    val p2 = Prop.forAll(Gen.choose(1, 3))(a => a == 1)
+    val r = (p1 || p2).run(2, TestRNG(1))
+    r match {
+      case Falsified(failure, successes) =>
+        assert(failure == "2, 2")
+      case y => assert(false)
+    }
   }
 }
