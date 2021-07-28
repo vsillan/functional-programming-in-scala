@@ -77,9 +77,26 @@ package scala_book {
   }
 
   //
+  // SGen (Sized generator)
+  //
+
+  case class SGen[A](forSize: Int => Gen[A]) {
+    def flatMap[B](f: A => Gen[B]): SGen[B] = {
+      SGen(i => this.forSize(i).flatMap(f))
+    }
+
+    def map[B](f: A => B): SGen[B] = {
+      SGen(i => this.forSize(i).map(f))
+    }
+
+    def apply(n: Int): Gen[A] = forSize(n)
+  }
+
+  //
   // Gen
   //
   case class Gen[A](sample: State[RNG, A]) {
+
     def flatMap[B](f: A => Gen[B]): Gen[B] = {
       Gen(State(s => {
         val (a2, s2) = sample.run(s)
@@ -87,9 +104,18 @@ package scala_book {
       }))
     }
 
+    def map[B](f: A => B): Gen[B] = {
+      Gen(State(s => {
+        val (a2, s2) = sample.run(s)
+        (f(a2), s2)
+      }))
+    }
+
     def listOfN(size: Gen[Int]): Gen[MyList[A]] = {
       size.flatMap(a => Gen.listOfN(a, this))
     }
+
+    def unsized: SGen[A] = SGen(_ => this)
   }
 
   object Gen {
