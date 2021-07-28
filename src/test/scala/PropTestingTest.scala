@@ -90,4 +90,10 @@ class PropTestingTest extends UnitSpec {
       case y => assert(false)
     }
   }
+
+  "SGen" should "listOf creates list with size of the passed length" in {
+    val x = SGen.listOf(Gen.choose(1, 3))
+    val (r, s) = x.forSize(2).sample.run(TestRNG(1))
+    assert(r == MyList(2, 1))
+  }
 }

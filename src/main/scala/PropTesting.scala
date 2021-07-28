@@ -92,11 +92,16 @@ package scala_book {
     def apply(n: Int): Gen[A] = forSize(n)
   }
 
+  object SGen {
+    def listOf[A](g: Gen[A]): SGen[MyList[A]] = {
+      SGen(i => Gen.listOfN(i, g))
+    }
+  }
+
   //
   // Gen
   //
   case class Gen[A](sample: State[RNG, A]) {
-
     def flatMap[B](f: A => Gen[B]): Gen[B] = {
       Gen(State(s => {
         val (a2, s2) = sample.run(s)
