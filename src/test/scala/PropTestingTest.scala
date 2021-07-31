@@ -104,7 +104,7 @@ class PropTestingTest extends UnitSpec {
       !ns.exist(_ > max)
     }
 
-    x.run(5, 10, TestRNG(1)) match {
+    x.run(100, 100, TestRNG(1)) match {
       case Passed => assert(true)
       case _      => assert(false)
     }

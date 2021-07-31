@@ -21,6 +21,7 @@ package scala_book {
     }
 
     // A naive implementation. Could try using math.Ordering train.
+    // The caller needs to use an explicit type because of how the compiler works.
     def max[A: TypeTag](): Int = {
       if (typeOf[A] =:= typeOf[Int]) {
         val intList: MyList[Int] = this.asInstanceOf[MyList[Int]]
