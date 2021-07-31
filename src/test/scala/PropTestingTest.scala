@@ -63,14 +63,14 @@ class PropTestingTest extends UnitSpec {
   "Prop &&" should "work" in {
     val p1 = Prop.forAll(Gen.choose(1, 2))(a => a == 1)
     val p2 = Prop.forAll(Gen.choose(1, 2))(a => a != 1)
-    val x = (p1 && p2).run(1, TestRNG(1))
+    val x = (p1 && p2).run(2, 1, TestRNG(1))
     assert(x.isFalsified == true)
   }
 
   "Prop ||" should "work" in {
     val p1 = Prop.forAll(Gen.choose(1, 2))(a => a == 1)
     val p2 = Prop.forAll(Gen.choose(1, 2))(a => a != 1)
-    val r = (p1 || p2).run(1, TestRNG(1))
+    val r = (p1 || p2).run(2, 1, TestRNG(1))
     assert(r.isFalsified == false)
 
     r match {
@@ -83,7 +83,7 @@ class PropTestingTest extends UnitSpec {
   "Prop ||" should "write an error message about both failed cases" in {
     val p1 = Prop.forAll(Gen.choose(1, 3))(a => a == 1)
     val p2 = Prop.forAll(Gen.choose(1, 3))(a => a == 1)
-    val r = (p1 || p2).run(2, TestRNG(1))
+    val r = (p1 || p2).run(2, 2, TestRNG(1))
     r match {
       case Falsified(failure, successes) =>
         assert(failure == "2, 2")
@@ -95,5 +95,18 @@ class PropTestingTest extends UnitSpec {
     val x = SGen.listOf(Gen.choose(1, 3))
     val (r, s) = x.forSize(2).sample.run(TestRNG(1))
     assert(r == MyList(2, 1))
+  }
+
+  "MyList max" should "work with a prop test" in {
+    val smallInt = Gen.choose(-10, 10)
+    val x = Prop.forAll(SGen.listOf(smallInt)) { ns =>
+      val max = ns.max[Int]
+      !ns.exist(_ > max)
+    }
+
+    x.run(5, 10, TestRNG(1)) match {
+      case Passed => assert(true)
+      case _      => assert(false)
+    }
   }
 }

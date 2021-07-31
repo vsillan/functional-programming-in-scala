@@ -5,33 +5,33 @@ package scala_book {
   //
   // Prop
   //
-  case class Prop(run: (Prop.TestCases, RNG) => Prop.Result) {
+  case class Prop(run: (Prop.Max, Prop.TestCases, RNG) => Prop.Result) {
     def &&(p: Prop): Prop = {
-      Prop((testCases, rng) => {
-        this.run(testCases, rng) match {
-          case Passed => p.run(testCases, rng)
+      Prop((max, testCases, rng) => {
+        this.run(max, testCases, rng) match {
+          case Passed => p.run(max, testCases, rng)
           case x      => x
         }
       })
     }
 
     def ||(p: Prop): Prop = {
-      Prop((testCases, rng) => {
-        this.run(testCases, rng) match {
+      Prop((max, testCases, rng) => {
+        this.run(max, testCases, rng) match {
           case Passed =>
-            p.run(testCases, rng) match {
+            p.run(max, testCases, rng) match {
               case Passed                        => Passed
               case Falsified(failure, successes) => Passed
             }
           case Falsified(failure, successes) =>
-            p.tag(failure).run(testCases, rng)
+            p.tag(failure).run(max, testCases, rng)
         }
       })
     }
 
     def tag(msg: String) =
-      Prop((n, rng) =>
-        run(n, rng) match {
+      Prop((max, n, rng) =>
+        run(max, n, rng) match {
           case Falsified(e, sc) => Falsified(msg + ", " + e, sc)
           case x                => x
         }
@@ -39,6 +39,7 @@ package scala_book {
   }
 
   object Prop {
+    type Max = Int
     type TestCases = Int
     type FailedCase = String
     type SuccessCount = Int
@@ -53,8 +54,28 @@ package scala_book {
     case class Falsified(failure: FailedCase, successes: SuccessCount)
         extends Result { def isFalsified = true }
 
+    def forAll[A](g: SGen[A])(f: A => Boolean): Prop = forAll(g(_))(f)
+
+    def forAll[A](g: Int => Gen[A])(f: A => Boolean): Prop =
+      Prop { (max, n, rng) =>
+        val casesPerSize = (n + (max - 1)) / max
+        val props: Stream[Prop] =
+          Stream.from(0).take((n min max) + 1).map(i => forAll(g(i))(f))
+
+        val prop = props
+          .map(p =>
+            Prop { (max, _, rng) =>
+              p.run(max, casesPerSize, rng)
+            }
+          )
+          .toList
+          .reduce(_ && _)
+
+        prop.run(max, n, rng)
+      }
+
     def forAll[A](as: Gen[A])(f: A => Boolean): Prop =
-      Prop((n, rng) =>
+      Prop((max, n, rng) =>
         randomStream(as)(rng)
           .zip(Stream.from(0))
           .take(n)
@@ -90,6 +111,7 @@ package scala_book {
     }
 
     def apply(n: Int): Gen[A] = forSize(n)
+
   }
 
   object SGen {

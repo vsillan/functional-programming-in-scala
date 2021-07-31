@@ -24,4 +24,8 @@ class MyListTest extends UnitSpec {
   "fill" should "create a new list of count with defined value repeating" in {
     assert(MyList.fill(5)(2) == MyList(2, 2, 2, 2, 2))
   }
+
+  "max" should "return the largest integer" in {
+    assert(MyList(1, 3, 2).max[Int] == 3)
+  }
 }

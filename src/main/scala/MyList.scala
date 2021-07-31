@@ -1,3 +1,5 @@
+import scala.reflect.runtime.universe._
+
 package scala_book {
   sealed trait MyList[+A] {
     def ::[B >: A](x: B): MyList[B] =
@@ -14,8 +16,27 @@ package scala_book {
         case Cons(h, t) => f(h, t.foldRight(z)(f))
       }
 
-    def length[A](): Int = {
+    def length(): Int = {
       this.foldRight(0)((a, b) => b + 1)
+    }
+
+    // A naive implementation. Could try using math.Ordering train.
+    def max[A: TypeTag](): Int = {
+      if (typeOf[A] =:= typeOf[Int]) {
+        val intList: MyList[Int] = this.asInstanceOf[MyList[Int]]
+        intList.foldRight(Int.MinValue)((a, b) => if (a > b) a else b)
+      } else {
+        sys.error(
+          "The max function doesn't support anything else than int lists for the time being."
+        )
+      }
+    }
+
+    def exist(f: (A) => Boolean): Boolean = {
+      this match {
+        case Cons(head, tail) => if (f(head)) true else tail.exist(f)
+        case Nil              => false
+      }
     }
   }
 
