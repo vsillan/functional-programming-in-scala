@@ -31,6 +31,13 @@ package scala_book {
     def map[A, B](pa: Par[A])(f: A => B): Par[B] =
       map2(pa, unit(()))((a, _) => f(a))
 
+    def map3[A, B, C, D](ap: Par[A], bp: Par[B], cp: Par[C])(
+        f: (A, B, C) => D
+    ): Par[D] = {
+      val abp = map2(ap, bp)((a, b) => (a, b))
+      map2(cp, abp)((c, ab) => f(ab._1, ab._2, c))
+    }
+
     def fork[A](a: => Par[A]): Par[A] =
       es =>
         es.submit(new Callable[A] {
