@@ -10,6 +10,10 @@ package scala_book {
       this.foldRight(Nil: MyList[B])((h, t) => Cons(f(h), t))
     }
 
+    def mapViaFoldLeft[B](f: A => B): MyList[B] = {
+      MyList.foldLeft(this, Nil: MyList[B])((t, h) => Cons(f(h), t))
+    }
+
     def foldRight[B](z: B)(f: (A, B) => B): B =
       this match {
         case Nil        => z

@@ -9,6 +9,10 @@ class MyListTest extends UnitSpec {
     assert(MyList(1, 2).map(x => x * x) == MyList(1, 4))
   }
 
+  "mapViaFoldLeft" should "apply function correctly (reverses the results)" in {
+    assert(MyList(1, 2).mapViaFoldLeft(x => x * x) == MyList(4, 1))
+  }
+
   "setHead" should "set the first item" in {
     assert(MyList.setHead(MyList(2, 3), 1) == MyList(1, 3))
   }
