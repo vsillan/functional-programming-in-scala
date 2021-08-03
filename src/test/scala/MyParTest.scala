@@ -8,8 +8,14 @@ class MyParTest extends UnitSpec {
     val pool: ExecutorService = Executors.newFixedThreadPool(3)
     val result = parFilter(pool).get()
 
-    assert(
-      result == List(2, 4)
-    )
+    assert(result == List(2, 4))
+  }
+
+  "sumOfWords" should "work" in {
+    val par = Par.sumOfWords(List("first paragraph", "second paragraph"))
+    val pool: ExecutorService = Executors.newFixedThreadPool(3)
+    val result = par(pool).get()
+
+    assert(result == 4)
   }
 }

@@ -72,5 +72,26 @@ package scala_book {
         )
       }
     }
+
+    def sumOfWords[A, B](ints: List[String]): Par[Int] = {
+      def wordsInString(s: String): Int = {
+        s.split(" ").length
+      }
+      applyParallel(ints, 0)(wordsInString)(_ + _)
+    }
+
+    def applyParallel[A, B](
+        li: List[A],
+        z: B
+    )(f: A => B)(g: (B, B) => B): Par[B] = {
+      if (li.length == 0)
+        Par.unit(z)
+      else if (li.length == 1)
+        Par.fork(Par.unit(f(li.head)))
+      else {
+        val (l, r) = li.splitAt(li.length / 2)
+        Par.map2(applyParallel(l, z)(f)(g), applyParallel(r, z)(f)(g))(g)
+      }
+    }
   }
 }
