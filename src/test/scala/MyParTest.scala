@@ -11,6 +11,14 @@ class MyParTest extends UnitSpec {
     assert(result == List(2, 4))
   }
 
+  "fork" should "not affect the result" in {
+    val a = Par.map(Par.unit(3))(_ + 1)
+    val b = Par.fork(a)
+
+    val pool: ExecutorService = Executors.newFixedThreadPool(2)
+    assert(a(pool).get() == b(pool).get())
+  }
+
   "sumOfWords" should "work" in {
     val par = Par.sumOfWords(List("first paragraph", "second paragraph"))
     val pool: ExecutorService = Executors.newFixedThreadPool(3)

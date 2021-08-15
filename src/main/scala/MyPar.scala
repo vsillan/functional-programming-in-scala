@@ -14,6 +14,8 @@ package scala_book {
 
     def lazyUnit[A](a: => A): Par[A] = fork(unit(a))
 
+    def delay[A](fa: => Par[A]): Par[A] = es => fa(es)
+
     private case class UnitFuture[A](get: A) extends Future[A] {
       def isDone = true
       def get(timeout: Long, units: TimeUnit) = get
@@ -72,6 +74,9 @@ package scala_book {
         )
       }
     }
+
+    def equal[A](e: ExecutorService)(p: Par[A], p2: Par[A]): Boolean =
+      p(e).get == p2(e).get
 
     def sumOfWords[A, B](ints: List[String]): Par[Int] = {
       def wordsInString(s: String): Int = {
