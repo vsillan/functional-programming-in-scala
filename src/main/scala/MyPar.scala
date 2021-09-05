@@ -132,5 +132,21 @@ package scala_book {
         cond: Par[Boolean]
     )(t: Par[A], f: Par[A]): Par[A] =
       genericChoice(cond)(List(t, f))((b, l) => if (b) l(0) else l(1))
+
+    // Usually called bind or flatMap in functional libraries
+    def flatMap[A, B](pa: Par[A])(f: A => Par[B]): Par[B] = { es =>
+      {
+        val x = run(es)(pa).get
+        run(es)(f(x))
+      }
+    }
+
+    def join[A](a: Par[Par[A]]): Par[A] = es => run(es)(run(es)(a).get)
+
+    def flatMapViaJoin[A, B](pa: Par[A])(f: A => Par[B]): Par[B] =
+      join(map(pa)(f))
+
+    def joinViaFlatMap[A](a: Par[Par[A]]): Par[A] =
+      flatMap(a)(x => x)
   }
 }
