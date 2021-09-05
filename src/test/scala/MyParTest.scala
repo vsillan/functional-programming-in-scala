@@ -40,4 +40,17 @@ class MyParTest extends UnitSpec {
 
     assert(result == 3)
   }
+
+  "genericChoice" should "choose based on the result of the first arg" in {
+    val x = Par.unit(false)
+
+    val a = Par.unit(1)
+    val b = Par.unit(2)
+
+    val par = Par.choiceViaGenericChoice(x)(a, b)
+    val pool: ExecutorService = Executors.newFixedThreadPool(3)
+    val result = par(pool).get()
+
+    assert(result == 2)
+  }
 }

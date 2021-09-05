@@ -111,5 +111,26 @@ package scala_book {
 
     def choiceViaN[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
       choiceN(Par.map(cond)(x => if (x == true) 1 else 0))(List(t, f))
+
+    def choiceMap[K, V](key: Par[K])(choices: Map[K, Par[V]]): Par[V] = { es =>
+      {
+        val x = run(es)(key).get
+        run(es)(choices(x))
+      }
+    }
+
+    def genericChoice[A, B, C](key: Par[B])(
+        choices: C
+    )(extractor: (B, C) => Par[A]): Par[A] = { es =>
+      {
+        val x = run(es)(key).get
+        run(es)(extractor(x, choices))
+      }
+    }
+
+    def choiceViaGenericChoice[A](
+        cond: Par[Boolean]
+    )(t: Par[A], f: Par[A]): Par[A] =
+      genericChoice(cond)(List(t, f))((b, l) => if (b) l(0) else l(1))
   }
 }
