@@ -26,4 +26,18 @@ class MyParTest extends UnitSpec {
 
     assert(result == 4)
   }
+
+  "choiceN" should "choose based on the result of the first arg" in {
+    val x = Par.unit(2)
+
+    val a = Par.unit(1)
+    val b = Par.unit(2)
+    val c = Par.unit(3)
+
+    val par = Par.choiceN(x)(List(a, b, c))
+    val pool: ExecutorService = Executors.newFixedThreadPool(3)
+    val result = par(pool).get()
+
+    assert(result == 3)
+  }
 }

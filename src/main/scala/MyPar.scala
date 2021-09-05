@@ -98,5 +98,18 @@ package scala_book {
         Par.map2(applyParallel(l, z)(f)(g), applyParallel(r, z)(f)(g))(g)
       }
     }
+
+    def choice[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
+      es => if (run(es)(cond).get) t(es) else f(es)
+
+    def choiceN[A](n: Par[Int])(choices: List[Par[A]]): Par[A] = { es =>
+      {
+        val x = run(es)(n).get
+        run(es)(choices(x))
+      }
+    }
+
+    def choiceViaN[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
+      choiceN(Par.map(cond)(x => if (x == true) 1 else 0))(List(t, f))
   }
 }
