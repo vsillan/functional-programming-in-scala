@@ -101,12 +101,19 @@ class PropTestingTest extends UnitSpec {
     val smallInt = Gen.choose(-10, 10)
     val x = Prop.forAll(SGen.listOf(smallInt)) { ns =>
       val max = ns.max[Int]
-      !ns.exist(_ > max)
+      !ns.exists(_ > max)
     }
 
     x.run(100, 100, TestRNG(1)) match {
       case Passed => assert(true)
       case _      => assert(false)
     }
+  }
+
+  "listOf1" should "create list with length of 1" in {
+    val x = Gen.listOf1(Gen.choose(1, 2))
+    val (r, s) = x.sample.run(TestRNG(1))
+
+    assert(r.length() == 1)
   }
 }

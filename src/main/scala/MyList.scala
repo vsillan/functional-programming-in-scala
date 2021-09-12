@@ -37,9 +37,9 @@ package scala_book {
       }
     }
 
-    def exist(f: (A) => Boolean): Boolean = {
+    def exists(f: (A) => Boolean): Boolean = {
       this match {
-        case Cons(head, tail) => if (f(head)) true else tail.exist(f)
+        case Cons(head, tail) => if (f(head)) true else tail.exists(f)
         case Nil              => false
       }
     }

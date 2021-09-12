@@ -95,6 +95,19 @@ package scala_book {
     def buildMsg[A](s: A, e: Exception): String =
       s"test case: $s\n" +
         s"generated an exception: ${e.getMessage}\n" + s"stack trace:\n ${e.getStackTrace.mkString("\n")}"
+
+    def run(
+        p: Prop,
+        maxSize: Int = 100,
+        testCases: Int = 100,
+        rng: RNG = SimpleRNG(System.currentTimeMillis)
+    ) =
+      p.run(maxSize, testCases, rng) match {
+        case Falsified(msg, n) =>
+          println(s"! Falsified after $n passed tests:\n $msg")
+        case Passed =>
+          println(s"+ OK, passed $testCases tests.")
+      }
   }
 
   //
@@ -118,6 +131,7 @@ package scala_book {
     def listOf[A](g: Gen[A]): SGen[MyList[A]] = {
       SGen(i => Gen.listOfN(i, g))
     }
+
   }
 
   //
@@ -174,6 +188,10 @@ package scala_book {
           })
         )
       )
+    }
+
+    def listOf1[A](g: Gen[A]): Gen[MyList[A]] = {
+      Gen.listOfN(1, g)
     }
 
     def union[A](g1: Gen[A], g2: Gen[A]): Gen[A] = {
