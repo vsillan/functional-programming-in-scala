@@ -1,5 +1,6 @@
 package scala_book {
   import scala_book.Prop.Passed
+  import scala_book.Prop.Proved
   import scala_book.Prop.Falsified
 
   //
@@ -10,6 +11,7 @@ package scala_book {
       Prop((max, testCases, rng) => {
         this.run(max, testCases, rng) match {
           case Passed => p.run(max, testCases, rng)
+          case Proved => p.run(max, testCases, rng)
           case x      => x
         }
       })
@@ -21,6 +23,7 @@ package scala_book {
           case Passed =>
             p.run(max, testCases, rng) match {
               case Passed                        => Passed
+              case Proved                        => Passed
               case Falsified(failure, successes) => Passed
             }
           case Falsified(failure, successes) =>
@@ -53,6 +56,10 @@ package scala_book {
 
     case class Falsified(failure: FailedCase, successes: SuccessCount)
         extends Result { def isFalsified = true }
+
+    case object Proved extends Result {
+      def isFalsified = false
+    }
 
     def forAll[A](g: SGen[A])(f: A => Boolean): Prop = forAll(g(_))(f)
 
@@ -89,6 +96,9 @@ package scala_book {
           .getOrElse(Passed)
       )
 
+    def check(p: => Boolean): Prop =
+      Prop { (_, _, _) => if (p) Proved else Falsified("()", 0) }
+
     def randomStream[A](g: Gen[A])(rng: RNG): Stream[A] =
       Stream.unfold(rng)(rng => Some(g.sample.run(rng)))
 
@@ -107,6 +117,8 @@ package scala_book {
           println(s"! Falsified after $n passed tests:\n $msg")
         case Passed =>
           println(s"+ OK, passed $testCases tests.")
+        case Proved =>
+          println(s"+ OK, proved property.")
       }
   }
 

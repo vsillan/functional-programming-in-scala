@@ -1,6 +1,7 @@
 import scala_book._
 import scala_book.Prop.Falsified
 import scala_book.Prop.Passed
+import scala_book.Prop.Proved
 
 class PropTestingTest extends UnitSpec {
   "Gen.choose" should "return a sampler which adheres to the passed range" in {
@@ -129,6 +130,15 @@ class PropTestingTest extends UnitSpec {
 
     prop.run(100, 100, SimpleRNG(1)) match {
       case Passed => assert(true)
+      case _      => assert(false)
+    }
+  }
+
+  "Prop checks" should "return Proved when combined with AND" in {
+    val prop1 = Prop.check(true)
+    val prop2 = Prop.check(true)
+    (prop1 && prop2).run(100, 100, SimpleRNG(1)) match {
+      case Proved => assert(true)
       case _      => assert(false)
     }
   }
