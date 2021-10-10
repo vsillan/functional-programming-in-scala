@@ -116,4 +116,20 @@ class PropTestingTest extends UnitSpec {
 
     assert(r.length() == 1)
   }
+
+  "List sort" should "work with a prop test" in {
+    val x = Gen.listOfN(10, Gen.choose(1, 10))
+
+    val prop = Prop.forAll(x) { y =>
+      val sorted = MyList.sorted(y)
+      val zipped = MyList.zipWith(sorted, MyList.tail(sorted))((a, b) => a >= b)
+
+      !zipped.exists(x => x == false)
+    }
+
+    prop.run(100, 100, SimpleRNG(1)) match {
+      case Passed => assert(true)
+      case _      => assert(false)
+    }
+  }
 }

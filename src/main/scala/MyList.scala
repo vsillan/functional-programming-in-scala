@@ -39,8 +39,8 @@ package scala_book {
 
     def exists(f: (A) => Boolean): Boolean = {
       this match {
-        case Cons(head, tail) => if (f(head)) true else tail.exists(f)
-        case Nil              => false
+        case Nil        => false
+        case Cons(h, t) => f(h) || t.exists(f)
       }
     }
   }
@@ -52,6 +52,22 @@ package scala_book {
     def apply[A](as: A*): MyList[A] =
       if (as.isEmpty) Nil
       else Cons(as.head, apply(as.tail: _*))
+
+    def transformToMyList[A](l: List[A]): MyList[A] = {
+      l.foldLeft(Nil: MyList[A])((li, a) => a :: li)
+    }
+
+    // Utility for transforming MyList to standard List to be able to access
+    // functions which haven't been implemented for MyList.
+    def transformToStandardList[A](l: MyList[A]): List[A] = {
+      MyList.foldLeft(l, List.empty[A])((li, a) => a :: li)
+    }
+
+    def sorted[A](li: MyList[A])(implicit ord: Ordering[A]): MyList[A] = {
+      val l = MyList.transformToStandardList(li)
+      val s = l.sorted
+      MyList.transformToMyList(s)
+    }
 
     @annotation.tailrec
     def foldLeft[A, B](as: MyList[A], z: B)(f: (B, A) => B): B = {
@@ -141,12 +157,6 @@ package scala_book {
         case Cons(x, xs) => x * product(xs)
       }
 
-    def tail[A](l: MyList[A]): MyList[A] =
-      l match {
-        case Nil        => sys.error("tail of empty MyList")
-        case Cons(_, t) => t
-      }
-
     def drop[A](l: MyList[A], n: Int): MyList[A] = {
       if (n == 0) l
       else
@@ -176,6 +186,12 @@ package scala_book {
       }
 
     def empty() = MyList()
+
+    def tail[A](l: MyList[A]): MyList[A] =
+      l match {
+        case Nil        => Nil
+        case Cons(_, t) => t
+      }
 
     def fill[A](c: Int)(x: A): MyList[A] = {
       def buildList(l: MyList[A], count: Int): MyList[A] = {

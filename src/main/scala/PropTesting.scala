@@ -124,14 +124,12 @@ package scala_book {
     }
 
     def apply(n: Int): Gen[A] = forSize(n)
-
   }
 
   object SGen {
     def listOf[A](g: Gen[A]): SGen[MyList[A]] = {
       SGen(i => Gen.listOfN(i, g))
     }
-
   }
 
   //
