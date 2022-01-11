@@ -53,4 +53,16 @@ class MyParTest extends UnitSpec {
 
     assert(result == 2)
   }
+
+  "Par.fork(x)" should "equal x" in {
+    val pint = Gen.unit(Par.unit(1))
+
+    val prop =
+      Prop.forAllPar(pint)(i => Par.equal(Par.fork(i), i))
+
+    Prop.runRaw(prop) match {
+      case Prop.Passed => assert(true)
+      case _           => assert(false)
+    }
+  }
 }

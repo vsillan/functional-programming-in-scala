@@ -2,6 +2,7 @@ package scala_book {
   import scala_book.Prop.Passed
   import scala_book.Prop.Proved
   import scala_book.Prop.Falsified
+  import java.util.concurrent.{Executors}
 
   //
   // Prop
@@ -99,6 +100,14 @@ package scala_book {
     def check(p: => Boolean): Prop =
       Prop { (_, _, _) => if (p) Proved else Falsified("()", 0) }
 
+    val executorGen = Gen.weighted(
+      Gen.choose(1, 4).map(Executors.newFixedThreadPool) -> .75,
+      Gen.unit(Executors.newCachedThreadPool) -> .25
+    )
+
+    def forAllPar[A](g: Gen[A])(f: A => Par.Par[Boolean]): Prop =
+      forAll(executorGen ** g) { case (s, a) => f(a)(s).get }
+
     def randomStream[A](g: Gen[A])(rng: RNG): Stream[A] =
       Stream.unfold(rng)(rng => Some(g.sample.run(rng)))
 
@@ -120,6 +129,14 @@ package scala_book {
         case Proved =>
           println(s"+ OK, proved property.")
       }
+
+    def runRaw(
+        p: Prop,
+        maxSize: Int = 100,
+        testCases: Int = 100,
+        rng: RNG = SimpleRNG(System.currentTimeMillis)
+    ) =
+      p.run(maxSize, testCases, rng)
   }
 
   //
@@ -148,6 +165,8 @@ package scala_book {
   // Gen
   //
   case class Gen[A](sample: State[RNG, A]) {
+    def **[B](g: Gen[B]): Gen[(A, B)] = (this map2 g)((_, _))
+
     def flatMap[B](f: A => Gen[B]): Gen[B] = {
       Gen(State(s => {
         val (a2, s2) = sample.run(s)
@@ -161,6 +180,9 @@ package scala_book {
         (f(a2), s2)
       }))
     }
+
+    def map2[B, C](g: Gen[B])(f: (A, B) => C): Gen[C] =
+      Gen(sample.map2(g.sample)(f))
 
     def listOfN(size: Gen[Int]): Gen[MyList[A]] = {
       size.flatMap(a => Gen.listOfN(a, this))
