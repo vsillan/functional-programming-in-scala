@@ -43,6 +43,18 @@ package scala_book {
         case Cons(h, t) => f(h) || t.exists(f)
       }
     }
+
+    def takeWhile(f: A => Boolean): MyList[A] = {
+      val l = MyList.transformToStandardList(this)
+      val s = l.takeWhile(f)
+      MyList.transformToMyList(s)
+    }
+
+    def dropWhile(f: A => Boolean): MyList[A] = {
+      val l = MyList.transformToStandardList(this)
+      val s = l.dropWhile(f)
+      MyList.transformToMyList(s)
+    }
   }
 
   case object Nil extends MyList[Nothing]
