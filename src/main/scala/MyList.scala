@@ -5,7 +5,7 @@ package scala_book {
     def ::[B >: A](x: B): MyList[B] =
       Cons(x, this)
 
-    //not stack-safe because it uses foldRight
+    // Not stack-safe as it uses foldRight
     def map[B](f: A => B): MyList[B] = {
       this.foldRight(Nil: MyList[B])((h, t) => Cons(f(h), t))
     }
